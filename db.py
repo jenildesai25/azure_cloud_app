@@ -23,7 +23,7 @@ SQL_DB = {
     "Uid": "jenildesai25@cse6331sqlserver",
     "Pwd": "Bhavya@1008",
     "Encrypt": "yes",
-    "TrustServerCertificate": "no",
+    "TrustServerCertificate": "yes",
     "Connection Timeout": 30
 }
 # MYSQL_DB = {
