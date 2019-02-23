@@ -11,15 +11,15 @@ from json import loads, dumps
 app = Flask(__name__, template_folder='templates')
 
 # Connect to db
-# database = Database()
-# redis = RedisCache().connection
+database = Database()
+redis = RedisCache().connection
 
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    # return 'Hello, World!'
 
-    # return render_template('index.html', earthquakes=[])
+    return render_template('index.html', earthquakes=[])
 
 
 @app.route('/analyze_randomq')

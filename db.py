@@ -37,8 +37,7 @@ REDIS_DB = {
     'port': 6380,
     'db': 0,
     'password': 'nLqjAKLdORnQot4eWD3PAOGOoW0GGsJFOSgICutxIlg',
-    'ssl': True,
-    'abortConnect': False
+    'ssl': True
 }
 
 azure_login = [
@@ -62,6 +61,7 @@ class Database(object):
     def __init__(self):
         try:
             self.connection = pypyodbc.connect('DRIVER={Driver};SERVER={Server};PORT=1443;DATABASE={Database};UID={Uid};PWD={Pwd}'.format(**SQL_DB))
+            print(self.connection)
         except Exception as e:
             print(e)
 
