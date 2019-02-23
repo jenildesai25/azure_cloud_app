@@ -1,6 +1,9 @@
+# Chaitanya Shah
+
 https://docs.microsoft.com/en-us/azure/
+https://docs.microsoft.com/en-us/azure/app-service/app-service-web-get-started-python
+https://github.com/jiangwen365/pypyodbc
+https://docs.microsoft.com/en-us/azure/redis-cache/cache-python-get-started
 http://blog.jmoz.co.uk/python-convert-datetime-to-timestamp/
-https://docs.microsoft.com/en-us/azure/redis-cache/cache-python-get-started
-https://docs.microsoft.com/en-us/azure/redis-cache/cache-python-get-started
-https://redis.io/commands
-https://redis.io/topics/data-types-intro
+cse6331.cloudapp.net
+cse6331.azurewebsites.net
