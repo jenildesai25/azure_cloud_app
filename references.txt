@@ -1,0 +1,6 @@
+https://docs.microsoft.com/en-us/azure/
+http://blog.jmoz.co.uk/python-convert-datetime-to-timestamp/
+https://docs.microsoft.com/en-us/azure/redis-cache/cache-python-get-started
+https://docs.microsoft.com/en-us/azure/redis-cache/cache-python-get-started
+https://redis.io/commands
+https://redis.io/topics/data-types-intro

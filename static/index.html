@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello World</title>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+{#    <link href="styles.css" rel="stylesheet">#}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.js"></script>#}
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.messagestore.js"></script>#}
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.fallbacks.js"></script>#}
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.language.js"></script>#}
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.parser.js"></script>#}
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.emitter.js"></script>#}
+{#    <script src="js/lib/jquery.i18n/jquery.i18n.emitter.bidi.js"></script>#}
+{#    <script src="antixss.js" type="text/javascript"></script>#}
+
+</head>
+
+<body>
+    <div class="container" id="container">
+        <h1>Jinesh Modi</h1>
+        <h2>Student ID: 1001622464</h2>
+
+{#        <form action="/uploaddata" method="get" style="padding-bottom: 5px;">#}
+{#            Upload CSV <input type="file" name="file" placeholder="Upload CSV file only">#}
+{#            <input type="submit" name="upload" value="upload">#}
+{#        </form>#}
+
+        <div style="padding: 5px;">
+{#            <form action="/createtable" method="get" style="padding-bottom: 5px;">#}
+{#                Create table query with indices:#}
+{#                <input type="number" name="magnitude" width="60" step="any">#}
+{#                <input type="submit" value="create">#}
+{#            </form>#}
+            <form action="/randomqueries" method="get" style="padding-bottom: 5px;">
+                Number of random queries to run:
+                <input type="number" name="queries" width="60">
+                <br> Magnitude range:
+                <input type="number" name="magnitudeStart" width="60" step="any">
+                <input type="number" name="magnitudeEnd" width="60" step="any">
+                <select name="withCache">
+                    <option value="1">Use cache</option>
+                    <option value="0">Do not use cache</option>
+                </select>
+{#                <select name="dateRange">#}
+{#                    <option value="day">1 Day</option>#}
+{#                    <option value="week">1 Week</option>#}
+{#                    <option value="month">30 Days</option>#}
+{#                </select>#}
+{#                <input type="date" name="startDate">#}
+                <input type="submit" value="Run Random Queries">
+{#                <input type="submit" value="Run Random Queries With Cache" name="randomQueriesWithCache">#}
+            </form>
+{#            <form action="/searchdistancerange" method="get" style="padding-bottom: 5px;">#}
+{#                Search by longitude & latitude: <br>#}
+{#                Latitude range: <input type="number" name="latitudeStart" width="60"> - <input type="number" name="latitudeEnd" width="60">#}
+{#                Longitude range: <input type="number" name="longitudeStart" width="60"> - <input type="number" name="longitudeEnd" width="60">#}
+{#                <input type="submit" value="Search">#}
+{#            </form>#}
+{#            <form action="/searchnear" method="get" style="padding-bottom: 5px;">#}
+{#                Latitude: <input type="number" name="latitude" width="60" step="any">#}
+{#                Longitude: <input type="number" name="longitude" width="60" step="any">#}
+{#                Distance: <input type="number" name="distance" width="60">#}
+{#                <input type="submit" value="Search">#}
+{#            </form>#}
+{#            <form action="/searchlargemagnitude" method="get" style="padding-bottom: 5px;">#}
+{#                Do large magnitude earthquakes <input type="number" name="magnitude" width="60"> happen at night?#}
+{#                <input type="submit" value="Search">#}
+{#            </form>#}
+        </div>
+
+        <h4 style="font-weight: bold">Time take for execution: {{ executionTime }} ms</h4>
+        <h4 style="font-weight: bold">Time take for First Execution: {{ firstExecutionTime }} ms</h4>
+
+        {% if tableData %}
+        <div style="padding: 5px;">
+            Count: {{ tableDataLen }}
+            <table border="2">
+                <tr style="font-weight: bold">
+                    <td>Location</td>
+{#                    <td>Latitude</td>#}
+{#                    <td>Longitude</td>#}
+{#                    <td>Magnitude</td>#}
+{#                    <td>Place</td>#}
+                </tr>
+                {% for data in tableData %}
+                    <tr>
+                        <td>{{ data[0] }}</td>
+{#                        <td>{{ data.latitude }}</td>#}
+{#                        <td>{{ data.longitude }}</td>#}
+{#                        <td>{{ data.mag }}</td>#}
+{#                        <td>{{ data.place }}</td>#}
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% elif dayStart %}
+            <div style="padding: 5px;">
+                Day start time is: {{ dayStart }} <br>
+                Day end time is: {{ dayEnd }} <br>
+                Magnitude is: {{ magnitude }} <br>
+                Day count is: {{ dayCount }} <br>
+                Night count is: {{ nightCount }} <br>
+                Conclusion:
+                {% if dayCount > nightCount %}
+                    There are more earthquakes in day then in night.
+                {% elif nightCount > dayCount %}
+                    There are more earthquakes in night then in night.
+                {% else %}
+                    Same
+                {% endif %}
+            </div>
+        {% endif %}
+
+    </div>
+</body>
+</html>
