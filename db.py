@@ -60,15 +60,16 @@ azure_login = [
 class Database(object):
 
     def __init__(self):
-        self.connection = pypyodbc.connect('DRIVER={Driver};SERVER={Server};PORT=1443;DATABASE={Database};UID={Uid};PWD={Pwd}'.format(**SQL_DB))
-        # try:
-        #     self.connection = mysql.connector.connect(**MYSQL_DB)
-        #     print("Connection established")
-        # except Exception as ex:
-        #     print('CONN Exception:',ex)
+        try:
+            self.connection = pypyodbc.connect('DRIVER={Driver};SERVER={Server};PORT=1443;DATABASE={Database};UID={Uid};PWD={Pwd}'.format(**SQL_DB))
+        except Exception as e:
+            print(e)
 
 
 class RedisCache(object):
 
     def __init__(self):
-        self.connection = StrictRedis(**REDIS_DB)
+        try:
+            self.connection = StrictRedis(**REDIS_DB)
+        except Exception as e:
+            print(e)
