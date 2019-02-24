@@ -11,6 +11,7 @@ from flask import Flask, render_template, request
 from db import Database, RedisCache
 from datetime import datetime
 from json import loads, dumps
+from copy import deepcopy
 
 app = Flask(__name__, template_folder='templates')
 
@@ -31,20 +32,20 @@ def analyze_randomq():
     cnt = int(request.args.get('count', 0))
     source = request.args.get('source', 'sqldb')
     random_list = [round(random.uniform(0, 10), 2) for i in range(cnt)]
-    totalExecutionTime = 0
     columns = ['time', 'latitude', 'longitude', 'place', 'mag']
     columns_str = '"' + '","'.join(columns) + '"'
-    lstDictionaryDataDisplay = []
     sqlquery = 'select {columns_str} from dbo.all_month where mag={mag};'
     cursor = database.connection.cursor()
     t = time.time()
-    # result = []
-    # data = []
+    # time_of_1st = 0
+    # total_time_taken = 0
+    # result_1st = []
     if source == 'cache':
         source_used = 'Redis Cache'
         for mag in random_list:
             formatted_query = sqlquery.format(columns_str=columns_str, mag=mag)
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            # t = time.time()
             result = redis.get(query_hash)
             print(result)
             if not result:
@@ -61,18 +62,11 @@ def analyze_randomq():
                 redis.set(query_hash, dumps(formatted_data))
                 # result = loads(redis.get(query_hash)).decode()
             else:
-                # cursor.execute(formatted_query)
-                # rows = cursor.fetchall()
-                # formatted_data = []
-                # for row in rows:
-                #     quake = dict()
-                #     for i, val in enumerate(row):
-                #         if type(val) == datetime:
-                #             val = time.mktime(val.timetuple())
-                #         quake[columns[i]] = val
-                #     formatted_data.append(quake)
-                # redis.set(query_hash, dumps(formatted_data))
                 result = loads(result.decode())
+                # total_time_taken += (time.time() - t)
+                # if time_of_1st == 0:
+                #     time_of_1st = deepcopy(total_time_taken)
+                #     result_1st = result
 
     else:
         source_used = 'Azure SQL'
