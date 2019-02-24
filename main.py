@@ -1,3 +1,7 @@
+# Jenil Desai - 0245
+# CSE-6331
+# Assignment3
+
 import csv
 import os
 import hashlib
@@ -27,28 +31,25 @@ def analyze_randomq():
     cnt = int(request.args.get('count', 0))
     source = request.args.get('source', 'sqldb')
     random_list = [round(random.uniform(0, 10), 2) for i in range(cnt)]
-
+    totalExecutionTime = 0
     columns = ['time', 'latitude', 'longitude', 'place', 'mag']
     columns_str = '"' + '","'.join(columns) + '"'
-
+    lstDictionaryDataDisplay = []
     sqlquery = 'select {columns_str} from dbo.all_month where mag={mag};'
     cursor = database.connection.cursor()
     t = time.time()
+    # result = []
+    # data = []
     if source == 'cache':
         source_used = 'Redis Cache'
         for mag in random_list:
             formatted_query = sqlquery.format(columns_str=columns_str, mag=mag)
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             result = redis.get(query_hash)
-            if result:
-                pass
-            else:
+            print(result)
+            if not result:
                 cursor.execute(formatted_query)
                 rows = cursor.fetchall()
-
-                # if rows:
-                #     print('Values present for: ',query_hash)
-
                 formatted_data = []
                 for row in rows:
                     quake = dict()
@@ -58,8 +59,21 @@ def analyze_randomq():
                         quake[columns[i]] = val
                     formatted_data.append(quake)
                 redis.set(query_hash, dumps(formatted_data))
+                # result = loads(redis.get(query_hash)).decode()
+            else:
+                # cursor.execute(formatted_query)
+                # rows = cursor.fetchall()
+                # formatted_data = []
+                # for row in rows:
+                #     quake = dict()
+                #     for i, val in enumerate(row):
+                #         if type(val) == datetime:
+                #             val = time.mktime(val.timetuple())
+                #         quake[columns[i]] = val
+                #     formatted_data.append(quake)
+                # redis.set(query_hash, dumps(formatted_data))
+                result = loads(result.decode())
 
-                result = loads(redis.get(query_hash)).decode()
     else:
         source_used = 'Azure SQL'
         for mag in random_list:
@@ -83,7 +97,6 @@ def analyze_randomq():
             result = formatted_data
 
     time_taken = time.time() - t
-
     return render_template('results.html', time_taken=time_taken, count=cnt, source=source_used)
 
 
@@ -172,6 +185,26 @@ def get_some():
         row = cursor.fetchone()
     print('QUAKEs:', all_data)
     return render_template('index.html', earthquakes=all_data)
+
+
+@app.route('/createtable')
+def createTable():
+    lstDictionaryData = []
+    # conn = pypyodbc.connect('DRIVER=' + driver + ';SERVER=' + server + ';PORT=1443;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+    cursor = database.connection.cursor()
+    # query = "CREATE TABLE dbo.all_month (\"time\" datetime, \"latitude\" FLOAT, \"longitude\" FLOAT, \"depth\" FLOAT, \"mag\" FLOAT, \"magType\" TEXT, \"nst\" INT, \"gap\" INT, \"dmin\" FLOAT, \"rms\" FLOAT, \"net\" TEXT, \"id\" TEXT, \"updated\" datetime, \"place\" TEXT, \"type\" TEXT, \"horontalError\" FLOAT, \"depthError\" FLOAT, \"magError\" FLOAT, \"magNst\" INT, \"status\" TEXT, \"locationSource\" TEXT, \"magSource\" TEXT)"
+    query = "CREATE TABLE dbo.all_month(time DATETIME,latitude FLOAT,longitude FLOAT,depth FLOAT,mag FLOAT,magType TEXT,nst INT,gap INT,dmin FLOAT,rms FLOAT,net TEXT,id TEXT,updated DATETIME,place TEXT,type TEXT,horontalError FLOAT,depthError FLOAT,magError FLOAT,magNst INT,status TEXT,locationSource TEXT,magSource TEXT)"
+    # print(query)
+    startTime = time.time()
+    # cursor.execute(query)
+    cursor.execdirect(query)
+    cursor.execdirect("CREATE INDEX all_month_mag__index ON cloudsqldb.dbo.earthquake (mag)")
+    cursor.execdirect("CREATE INDEX all_month_lat__index ON cloudsqldb.dbo.earthquake (latitude)")
+    cursor.execdirect("CREATE INDEX all_month_long__index ON cloudsqldb.dbo.earthquake (longitude)")
+    endTime = time.time()
+    conn.close()
+    executionTime = (endTime - startTime) * 1000
+    return render_template('results.html', earthquakes=lstDictionaryData, count=lstDictionaryData.__len__(), time_taken=executionTime)
 
 
 @app.route('/upload_data', methods=['POST'])
