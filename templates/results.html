@@ -32,38 +32,38 @@
     <table border="3">
             <tr>
               <td>
-                TIME
+                Result
               </td>
-              <td>
-                LATITUDE
-              </td>
-              <td>
-                LONGITUDE
-              </td>
-              <td>
-                PLACE
-              </td>
-              <td>
-                MAG
-              </td>
+{#              <td>#}
+{#                LATITUDE#}
+{#              </td>#}
+{#              <td>#}
+{#                LONGITUDE#}
+{#              </td>#}
+{#              <td>#}
+{#                PLACE#}
+{#              </td>#}
+{#              <td>#}
+{#                MAG#}
+{#              </td>#}
             </tr>
             {% for quake in earthquakes %}
               <tr>
                 <td>
-                  {{ quake.time }}
+                  {{ quake }}
                 </td>
-                <td>
-                  {{ quake.latitude }}
-                </td>
-                <td>
-                  {{ quake.longitude }}
-                </td>
-                <td>
-                  {{ quake.place }}
-                </td>
-                <td>
-                  {{ quake.mag }}
-                </td>
+{#                <td>#}
+{#                  {{ quake.latitude }}#}
+{#                </td>#}
+{#                <td>#}
+{#                  {{ quake.longitude }}#}
+{#                </td>#}
+{#                <td>#}
+{#                  {{ quake.place }}#}
+{#                </td>#}
+{#                <td>#}
+{#                  {{ quake.mag }}#}
+{#                </td>#}
               </tr>
             {% endfor %}
           </table>
