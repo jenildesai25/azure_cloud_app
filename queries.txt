@@ -68,3 +68,36 @@ create index all_month_long__index
 go
 
 
+
+
+
+create table population
+(
+	State TEXT,
+	[2010] INT,
+	[2011] INT,
+	[2012] INT,
+	[2013] INT,
+	[2014] INT,
+	[2015] INT,
+	[2016] INT,
+	[2017] INT,
+	[2018] INT,
+	ID INT identity
+		constraint population_pk
+			primary key nonclustered
+)
+go
+
+create table counties
+(
+	County TEXT,
+	State TEXT,
+	ID INT identity
+		constraint counties_pk
+			primary key nonclustered
+)
+go
+
+
+

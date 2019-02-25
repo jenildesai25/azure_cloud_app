@@ -183,30 +183,37 @@ def get_some():
 
 @app.route('/createtable')
 def createTable():
-    lstDictionaryData = []
-    # conn = pypyodbc.connect('DRIVER=' + driver + ';SERVER=' + server + ';PORT=1443;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-    cursor = database.connection.cursor()
-    # query = "CREATE TABLE dbo.all_month (\"time\" datetime, \"latitude\" FLOAT, \"longitude\" FLOAT, \"depth\" FLOAT, \"mag\" FLOAT, \"magType\" TEXT, \"nst\" INT, \"gap\" INT, \"dmin\" FLOAT, \"rms\" FLOAT, \"net\" TEXT, \"id\" TEXT, \"updated\" datetime, \"place\" TEXT, \"type\" TEXT, \"horontalError\" FLOAT, \"depthError\" FLOAT, \"magError\" FLOAT, \"magNst\" INT, \"status\" TEXT, \"locationSource\" TEXT, \"magSource\" TEXT)"
-    query = "CREATE TABLE dbo.all_month(time DATETIME,latitude FLOAT,longitude FLOAT,depth FLOAT,mag FLOAT,magType TEXT,nst INT,gap INT,dmin FLOAT,rms FLOAT,net TEXT,id TEXT,updated DATETIME,place TEXT,type TEXT,horontalError FLOAT,depthError FLOAT,magError FLOAT,magNst INT,status TEXT,locationSource TEXT,magSource TEXT)"
-    # print(query)
-    startTime = time.time()
-    # cursor.execute(query)
-    cursor.execdirect(query)
-    cursor.execdirect("CREATE INDEX all_month_mag__index ON cloudsqldb.dbo.earthquake (mag)")
-    cursor.execdirect("CREATE INDEX all_month_lat__index ON cloudsqldb.dbo.earthquake (latitude)")
-    cursor.execdirect("CREATE INDEX all_month_long__index ON cloudsqldb.dbo.earthquake (longitude)")
-    endTime = time.time()
-    conn.close()
-    executionTime = (endTime - startTime) * 1000
-    return render_template('results.html', earthquakes=lstDictionaryData, count=lstDictionaryData.__len__(), time_taken=executionTime)
+    try:
+        lstDictionaryData = []
+        # conn = pypyodbc.connect('DRIVER=' + driver + ';SERVER=' + server + ';PORT=1443;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+        cursor = database.connection.cursor()
+        # query = "drop table dbo.people"
+        # cursor.execdirect(query)
+        # query = "CREATE TABLE dbo.all_month (\"time\" datetime, \"latitude\" FLOAT, \"longitude\" FLOAT, \"depth\" FLOAT, \"mag\" FLOAT, \"magType\" TEXT, \"nst\" INT, \"gap\" INT, \"dmin\" FLOAT, \"rms\" FLOAT, \"net\" TEXT, \"id\" TEXT, \"updated\" datetime, \"place\" TEXT, \"type\" TEXT, \"horontalError\" FLOAT, \"depthError\" FLOAT, \"magError\" FLOAT, \"magNst\" INT, \"status\" TEXT, \"locationSource\" TEXT, \"magSource\" TEXT)"
+        # query = "CREATE TABLE dbo.all_month(time DATETIME,latitude FLOAT,longitude FLOAT,depth FLOAT,mag FLOAT,magType TEXT,nst INT,gap INT,dmin FLOAT,rms FLOAT,net TEXT,id TEXT,updated DATETIME,place TEXT,type TEXT,horontalError FLOAT,depthError FLOAT,magError FLOAT,magNst INT,status TEXT,locationSource TEXT,magSource TEXT)"
+        query = "CREATE TABLE dbo.people(Name TEXT, Grade INT, Room INT, Telnum INT, Picture TEXT, Keywords TEXT)"
+        startTime = time.time()
+        # cursor.execute(query)
+        cursor.execdirect(query)
+        # cursor.execdirect("CREATE INDEX all_month_mag__index ON cloudsqldb.dbo.earthquake (mag)")
+        # cursor.execdirect("CREATE INDEX all_month_lat__index ON cloudsqldb.dbo.earthquake (latitude)")
+        # cursor.execdirect("CREATE INDEX all_month_long__index ON cloudsqldb.dbo.earthquake (longitude)")
+        endTime = time.time()
+        # conn.close()
+        executionTime = (endTime - startTime) * 1000
+        return render_template('results.html', earthquakes=lstDictionaryData, count=lstDictionaryData.__len__(), time_taken=executionTime)
+    except Exception as e:
+        print(e)
 
 
 @app.route('/upload_data', methods=['POST'])
 def upload():
     try:
+        createTable()
         tempfile = request.files['file']
-        sqlquery = 'Insert into "all_month" ({columns}) values ({values})'
-        filename = 'tempcsv'
+        # sqlquery = 'Insert into "all_month" ({columns}) values ({values})'
+        sqlquery = 'Insert into dbo.people ({columns}) values ({values})'
+        filename = 'temp.csv'
         tempfile.save(os.path.join(filename))
 
         csv_file = open(filename, 'r')
@@ -218,6 +225,8 @@ def upload():
             print("QUERy:", q)
             cursor = database.connection.cursor()
             cursor.execute(q)
+            database.connection.commit()
+            print('commit executed.')
         csv_file.close()
         # file.save(os.path.join(Uploadpath, file_name))
         # con = engine.connect()
@@ -230,7 +239,8 @@ def upload():
         # con.close()
         return render_template('index.html', earthquakes=[])
     except Exception as e:
-        return render_template('index.html',earthquakes=[])
+        return render_template('index.html', earthquakes=[])
+
 
 if __name__ == '__main__':
     app.run(debug=True)
