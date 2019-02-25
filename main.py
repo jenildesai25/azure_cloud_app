@@ -203,32 +203,34 @@ def createTable():
 
 @app.route('/upload_data', methods=['POST'])
 def upload():
-    sqlquery = 'Insert into "all_month" ({columns}) values ({values})'
-    tempfile = request.files['files']
-    filename = 'tempcsv'
-    tempfile.save(os.path.join(filename))
+    try:
+        tempfile = request.files['file']
+        sqlquery = 'Insert into "all_month" ({columns}) values ({values})'
+        filename = 'tempcsv'
+        tempfile.save(os.path.join(filename))
 
-    csv_file = open(filename, 'r')
-    reader = csv.DictReader(csv_file)
-    for row in reader:
-        cols = '"' + '","'.join(row.keys()) + '"'
-        vals = '\'' + '\',\''.join(row.values()) + '\''
-        q = sqlquery.format(columns=cols, values=vals)
-        print("QUERy:", q)
-        cursor = database.connection.cursor()
-        cursor.execute(q)
-    csv_file.close()
-    # file.save(os.path.join(Uploadpath, file_name))
-    # con = engine.connect()
-    # df = pd.read_csv(os.path.join(Uploadpath, file_name))
-    # tab_file = file_name.split('.')[0]
-    # start_time = time.time()
-    # df.to_sql(name=tab_file, con=con, if_exists='replace', index=False)
-    # end_time = time.time()
-    # diff = str((end_time - start_time) * 1000)
-    # con.close()
-    return render_template('index.html', earthquakes=[])
-
+        csv_file = open(filename, 'r')
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            cols = '"' + '","'.join(row.keys()) + '"'
+            vals = '\'' + '\',\''.join(row.values()) + '\''
+            q = sqlquery.format(columns=cols, values=vals)
+            print("QUERy:", q)
+            cursor = database.connection.cursor()
+            cursor.execute(q)
+        csv_file.close()
+        # file.save(os.path.join(Uploadpath, file_name))
+        # con = engine.connect()
+        # df = pd.read_csv(os.path.join(Uploadpath, file_name))
+        # tab_file = file_name.split('.')[0]
+        # start_time = time.time()
+        # df.to_sql(name=tab_file, con=con, if_exists='replace', index=False)
+        # end_time = time.time()
+        # diff = str((end_time - start_time) * 1000)
+        # con.close()
+        return render_template('index.html', earthquakes=[])
+    except Exception as e:
+        return render_template('index.html',earthquakes=[])
 
 if __name__ == '__main__':
     app.run(debug=True)
