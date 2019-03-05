@@ -29,80 +29,83 @@ def hello_world():
 
 @app.route('/analyze_randomq')
 def analyze_randomq():
-    # year
-    cnt = int(request.args.get('count', ''))
-    # pop start
-    year = int(request.args.get('year', 2010))
-    # pop end
-    year_end = int(request.args.get('yearend', 2018))
-    q = int(request.args.get('q', 50))
+    s_mag = float(request.args.get('smag', 2))
+    e_mag = float(request.args.get('emag', 3))
+    cnt = int(request.args.get('count', 0))
     source = request.args.get('source', 'sqldb')
-    # random_list = [round(random.uniform(0, 10), 2) for i in range(cnt)]
-    # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
-    # columns_str = '"' + '","'.join(columns) + '"'
-    sqlquery = 'select State from population where [{0}] between {1} and {2};'.format(cnt, year, year_end)
-    # sqlquery = 'select population.[{0}] from  population LEFT JOIN dbo.statecode ON dbo.statecode.ID = dbo.population.ID where statecode.[Short name] like \'%{1}%\';'.format(year, cnt)
-    # sqlquery.append('select count(*) from  counties LEFT JOIN dbo.statecode ON dbo.statecode.ID = dbo.counties.ID where counties.State like \'%{0}%\';'.format(cnt))
-    # sqlquery.append('select County from counties where State like \'%{0}%\';'.format(cnt))
+    random_list = [round(random.uniform(s_mag, e_mag), 1) for i in range(cnt)]
+    columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+    columns_str = '"' + '","'.join(columns) + '"'
 
+    sqlquery = 'select {columns_str} from dbo.all_month where mag={mag};'
     cursor = database.connection.cursor()
     t = time.time()
-    # time_of_1st = 0
-    # total_time_taken = 0
-    # result_1st = []
+    time_of_1st = 0
+    total_time_taken = 0
+    result_1st = []
     if source == 'cache':
         source_used = 'Redis Cache'
-        for sql in range(q):
-            formatted_query = sqlquery
+        for mag in random_list:
+            formatted_query = sqlquery.format(columns_str=columns_str, mag=mag)
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
-            # t = time.time()
+            t = time.time()
+
             result = redis.get(query_hash)
-            print(result)
-            if not result:
+            if result:
+                result = loads(result.decode())
+            else:
                 cursor.execute(formatted_query)
                 rows = cursor.fetchall()
+
                 formatted_data = []
                 for row in rows:
-                    # quake = dict()
-                    # for i, val in enumerate(row):
-                    #     if type(val) == datetime:
-                    #         val = time.mktime(val.timetuple())
-                    #     # quake[columns[i]] = val
-                    formatted_data.append(row[0])
+                    quake = dict()
+                    for i, val in enumerate(row):
+                        if type(val) == datetime:
+                            val = time.mktime(val.timetuple())
+                        quake[columns[i]] = val
+                    formatted_data.append(quake)
                 redis.set(query_hash, dumps(formatted_data))
-                # result = loads(redis.get(query_hash)).decode()
-            else:
-                result = loads(result.decode())
-                # total_time_taken += (time.time() - t)
-                # if time_of_1st == 0:
-                #     time_of_1st = deepcopy(total_time_taken)
-                #     result_1st = result
+
+                result = redis.get(query_hash)
+            result = loads(result.decode())
+            total_time_taken += (time.time() - t)
+            # if time_of_1st == 0:
+            # time_of_1st = deepcopy(total_time_taken)
+            result_1st = result
 
     else:
         source_used = 'Azure SQL'
-        for sql in range(q):
-            formatted_query = sqlquery
+        for mag in random_list:
+            formatted_query = sqlquery.format(columns_str=columns_str, mag=mag)
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            t = time.time()
+
             cursor.execute(formatted_query)
+
+            total_time_taken += (time.time() - t)
+
             rows = cursor.fetchall()
 
             # if rows:
             #     print('Values present for: ',query_hash)
             formatted_data = []
             for row in rows:
-                formatted_data.append(row[0])
-                # quake = dict()
-                # for i, val in enumerate(row):
-                #     if type(val) == datetime:
-                #         val = time.mktime(val.timetuple())
-                #     # quake[columns[i]] = val
-                # formatted_data.append(quake)
+                quake = dict()
+                for i, val in enumerate(row):
+                    if type(val) == datetime:
+                        val = time.mktime(val.timetuple())
+                    quake[columns[i]] = val
+                formatted_data.append(quake)
             redis.set(query_hash, dumps(formatted_data))
 
             result = formatted_data
+            result_1st = result
+            # if time_of_1st == 0:
+            #     time_of_1st = deepcopy(total_time_taken)
+            #     result_1st = result
 
-    time_taken = time.time() - t
-    return render_template('results.html', time_taken=time_taken, count=cnt, source=source_used, earthquakes=result)
+    return render_template('results.html', time_taken=total_time_taken, count=cnt, source=source_used, earthquakes=result_1st)
 
 
 @app.route('/analyze_sameq')

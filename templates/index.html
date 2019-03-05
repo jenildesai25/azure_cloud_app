@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  
+   <script src="http://d3js.org/d3.v4.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+
+
   <title>Azure App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
@@ -21,10 +24,9 @@
     <p>
 
         <form action="/analyze_randomq" method="get">
-          7. state :<input type="text" name="count" width="5">
-            year :<input type="number" name="year" width="5">
-{#        pop end:<input type="number" name="source" width="5">#}
-{#      # of queries you want:<input type="number" name="q" width="5">#}
+          7. count :<input type="text" name="count" width="5">
+            s mag :<input type="number" name="smag" width="5">
+            e mag :<input type="number" name="emag" width="5">
           <br>
           Source
           <select name="source">

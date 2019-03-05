@@ -4,9 +4,11 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  
+  <script src="http://d3js.org/d3.v4.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+
   <title>Azure App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
@@ -18,6 +20,42 @@
   </header>
   <main>
     <br>
+      <div id="chartContainer">
+            <script type="text/javascript">
+
+                var svg = dimple.newSvg("#chartContainer", 700, 400);
+                var data = {{earthquakes | tojson | safe}};
+                console.log(data);
+                var chart = new dimple.chart(svg, data);
+
+                chart.addCategoryAxis("x", "longi");
+                chart.addCategoryAxis("y", "lat");
+                chart.addSeries(null, dimple.plot.bubble);
+                chart.draw();
+
+            </script>
+          </div>
+
+    <!--<div>-->
+        <!--<script type="text/javascript">-->
+            <!--var svg = dimple.newSvg("#firstchart", 700, 400);-->
+            <!--var data = {{earthquakes | tojson | safe}}-->
+            <!--var chart = new dimple.chart(svg, data);-->
+            <!--chart.addCategoryAxis("y", "mag");-->
+            <!--chart.addMeasureAxis("x", "count");-->
+            <!--chart.addSeries(null, dimple.plot.bar);-->
+            <!--chart.draw();-->
+
+            <!--var svg = dimple.newSvg("#secondchart", 700, 400);-->
+            <!--var data = {{earthquakes | tojson | safe}}-->
+            <!--var chart = new dimple.chart(svg, data);-->
+            <!--chart.setBounds(20, 20, 460, 360)-->
+            <!--chart.addMeasureAxis("p", "count");-->
+            <!--chart.addSeries("mag", dimple.plot.pie);-->
+            <!--chart.addLegend(500, 20, 90, 300, "left")-->
+            <!--chart.draw();-->
+        <!--</script>-->
+    <!--</div>-->
     <p>
         RESULT
         <br>
@@ -29,47 +67,47 @@
     </p>
     <br>
     <br>
-    <table border="3">
-            <tr>
-              <td>
-                Result
-              </td>
-{#              <td>#}
-{#                LATITUDE#}
-{#              </td>#}
-{#              <td>#}
-{#                LONGITUDE#}
-{#              </td>#}
-{#              <td>#}
-{#                PLACE#}
-{#              </td>#}
-{#              <td>#}
-{#                MAG#}
-{#              </td>#}
-            </tr>
-            {% for quake in earthquakes %}
-              <tr>
-                <td>
-                  {{ quake }}
-                </td>
-{#                <td>#}
-{#                  {{ quake.latitude }}#}
-{#                </td>#}
-{#                <td>#}
-{#                  {{ quake.longitude }}#}
-{#                </td>#}
-{#                <td>#}
-{#                  {{ quake.place }}#}
-{#                </td>#}
-{#                <td>#}
-{#                  {{ quake.mag }}#}
-{#                </td>#}
-              </tr>
-            {% endfor %}
-          </table>
-          <br>
-          
-    
+    <!--<table border="3">-->
+            <!--<tr>-->
+              <!--<td>-->
+                <!--Result-->
+              <!--</td>-->
+              <!--<td>-->
+                <!--LATITUDE-->
+              <!--</td>-->
+              <!--<td>-->
+                <!--LONGITUDE-->
+              <!--</td>-->
+              <!--<td>-->
+                <!--PLACE-->
+              <!--</td>-->
+              <!--<td>-->
+                <!--MAG-->
+              <!--</td>-->
+            <!--</tr>-->
+            <!--{% for quake in earthquakes %}-->
+              <!--<tr>-->
+                <!--<td>-->
+                  <!--{{ quake.time }}-->
+                <!--</td>-->
+                <!--<td>-->
+                  <!--{{ quake.latitude }}-->
+                <!--</td>-->
+                <!--<td>-->
+                  <!--{{ quake.longitude }}-->
+                <!--</td>-->
+                <!--<td>-->
+                  <!--{{ quake.place }}-->
+                <!--</td>-->
+                <!--<td>-->
+                  <!--{{ quake.mag }}-->
+                <!--</td>-->
+              <!--</tr>-->
+            <!--{% endfor %}-->
+          <!--</table>-->
+          <!--<br>-->
+
+
   </main>
 </body>
 </html>
