@@ -209,7 +209,7 @@ def analyze_sameq():
             #     print('Values present for: ',query_hash)
 
             for row in rows:
-                formatted_data.append({"state": row['counts'], "range of population": '{}'.format(range1) + " to " + '{}'.format(range1end)})
+                formatted_data.append({"state": row['counts'], "range of population": '{}'.format(start) + " to " + '{}'.format(end)})
             #     quake['year'] = year
             #     quake['']
             #     # for i, val in enumerate(row):
