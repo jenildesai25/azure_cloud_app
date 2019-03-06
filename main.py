@@ -122,10 +122,10 @@ def analyze_sameq():
     year = int(request.args.get('year', 2017))
     range1 = int(request.args.get('range1', 20))
     range1end = int(request.args.get('range1end', 50))
-    range2 = int(request.args.get('range2', 10))
-    range2end = int(request.args.get('range2end', 20))
-    range3 = int(request.args.get('range3', 0))
-    range3end = int(request.args.get('range3end', 10))
+    # range2 = int(request.args.get('range2', 10))
+    # range2end = int(request.args.get('range2end', 20))
+    # range3 = int(request.args.get('range3', 0))
+    # range3end = int(request.args.get('range3end', 10))
     # year_start = int(request.args.get('yearstart', 2010))
     # year_end = int(request.args.get('yearend', 2018))
     source = request.args.get('source', 'sqldb')
@@ -133,9 +133,10 @@ def analyze_sameq():
     # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
     # columns_str = '"' + '","'.join(columns) + '"'
     years = []
+
     years.append((range1, range1end))
-    years.append((range2, range2end))
-    years.append((range3, range3end))
+    # years.append((range2, range2end))
+    # years.append((range3, range3end))
     # for i in range(year_start, year_end + 1):
     #     years.append(i)
     formatted_data = []
@@ -148,8 +149,8 @@ def analyze_sameq():
     new_data = []
     if source == 'cache':
         source_used = 'Redis Cache'
-        for start, end in years:
-            sqlquery = 'select State from population where [{0}] between {1} and {2}'.format(year, start, end)
+        while range1 <= range1end:
+            sqlquery = 'select count(*) as counts from population where [{}] between {} and {};'.format(year, range1, range1end)
             formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             t = time.time()
@@ -184,8 +185,12 @@ def analyze_sameq():
     else:
         source_used = 'Azure SQL'
         new_data = []
-        for start, end in years:
-            sqlquery = 'select State from population where [{0}] between {1} and {2}'.format(year, start, end)
+        # magStart = 0
+        # magEnd = magStart + range1end
+
+        while range1 < 1000000:
+            print(range1)
+            sqlquery = 'select count(*) as counts from population where [{}] between {} and {};'.format(year, range1, range1end)
             formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             t = time.time()
@@ -197,7 +202,7 @@ def analyze_sameq():
             #     print('Values present for: ',query_hash)
 
             for row in rows:
-                formatted_data.append({"# People": row['state'], "Age Range": '{}'.format(start) + " to " + '{}'.format(end)})
+                formatted_data.append({"# People": row['counts'], "Age Range": '{}'.format(range1) + " to " + '{}'.format(range1end)})
             #     quake['year'] = year
             #     quake['']
             #     # for i, val in enumerate(row):
@@ -206,7 +211,7 @@ def analyze_sameq():
             #     # quake[columns[i]] = val
             #     formatted_data.append(quake)
             redis.set(query_hash, dumps(formatted_data))
-
+            range1 = range1 + 300000
         result = formatted_data
         result_1st = result
 
