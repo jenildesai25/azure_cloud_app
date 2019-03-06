@@ -119,16 +119,25 @@ def analyze_randomq():
 
 @app.route('/analyze_sameq')
 def analyze_sameq():
-    state = request.args.get('state', '')
-    year_start = int(request.args.get('yearstart', 2010))
-    year_end = int(request.args.get('yearend', 2018))
+    year = int(request.args.get('year', 2017))
+    range1 = int(request.args.get('range1', 20))
+    range1end = int(request.args.get('range1end', 50))
+    range2 = int(request.args.get('range2', 10))
+    range2end = int(request.args.get('range2end', 20))
+    range3 = int(request.args.get('range3', 0))
+    range3end = int(request.args.get('range3end', 10))
+    # year_start = int(request.args.get('yearstart', 2010))
+    # year_end = int(request.args.get('yearend', 2018))
     source = request.args.get('source', 'sqldb')
     # random_list = [round(random.uniform(s_mag, e_mag), 1) for i in range(cnt)]
     # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
     # columns_str = '"' + '","'.join(columns) + '"'
     years = []
-    for i in range(year_start, year_end + 1):
-        years.append(i)
+    years.append((range1, range1end))
+    years.append((range2, range2end))
+    years.append((range3, range3end))
+    # for i in range(year_start, year_end + 1):
+    #     years.append(i)
     formatted_data = []
     # sqlquery = 'select * from dbo.minnow;'
     cursor = database.connection.cursor()
@@ -139,8 +148,8 @@ def analyze_sameq():
     new_data = []
     if source == 'cache':
         source_used = 'Redis Cache'
-        for year in years:
-            sqlquery = 'select [{0}] from dbo.population where State like \'%{1}%\';'.format(year, state)
+        for start, end in years:
+            sqlquery = 'select State from population where [{0}] between {1} and {2}'.format(year, start, end)
             formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             t = time.time()
@@ -175,8 +184,8 @@ def analyze_sameq():
     else:
         source_used = 'Azure SQL'
         new_data = []
-        for year in years:
-            sqlquery = 'select [{0}] from dbo.population where State like \'%{1}%\';'.format(year, state)
+        for start, end in years:
+            sqlquery = 'select State from population where [{0}] between {1} and {2}'.format(year, start, end)
             formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             t = time.time()
@@ -188,7 +197,7 @@ def analyze_sameq():
             #     print('Values present for: ',query_hash)
 
             for row in rows:
-                formatted_data.append({"# People": row.cursor_description[0][0], "Age Range": '0' + " to " + str(row['{}'.format(year)])})
+                formatted_data.append({"# People": row['state'], "Age Range": '{}'.format(start) + " to " + '{}'.format(end)})
             #     quake['year'] = year
             #     quake['']
             #     # for i, val in enumerate(row):
