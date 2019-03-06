@@ -1,6 +1,6 @@
 # Jenil Desai - 0245
 # CSE-6331
-# Assignment3
+# Assignment4
 
 import csv
 import os
@@ -32,6 +32,7 @@ def analyze_randomq():
     s_mag = float(request.args.get('smag', 2))
     e_mag = float(request.args.get('emag', 3))
     cnt = int(request.args.get('count', 0))
+    # age = int(request.args.get('age', 10))
     source = request.args.get('source', 'sqldb')
     random_list = [round(random.uniform(s_mag, e_mag), 1) for i in range(cnt)]
     columns = ['time', 'latitude', 'longitude', 'place', 'mag']
@@ -43,6 +44,7 @@ def analyze_randomq():
     time_of_1st = 0
     total_time_taken = 0
     result_1st = []
+    new_data = []
     if source == 'cache':
         source_used = 'Redis Cache'
         for mag in random_list:
@@ -73,6 +75,9 @@ def analyze_randomq():
             # if time_of_1st == 0:
             # time_of_1st = deepcopy(total_time_taken)
             result_1st = result
+            # new_data = []
+            # for i, value in enumerate(result_1st):
+            #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
 
     else:
         source_used = 'Azure SQL'
@@ -101,6 +106,10 @@ def analyze_randomq():
 
             result = formatted_data
             result_1st = result
+
+            # new_data = []
+            # for i, value in enumerate(result_1st):
+            #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
             # if time_of_1st == 0:
             #     time_of_1st = deepcopy(total_time_taken)
             #     result_1st = result
@@ -110,150 +119,261 @@ def analyze_randomq():
 
 @app.route('/analyze_sameq')
 def analyze_sameq():
-    cnt = int(request.args.get('count', 0))
+    state = request.args.get('state', '')
+    year_start = int(request.args.get('yearstart', 2010))
+    year_end = int(request.args.get('yearend', 2018))
     source = request.args.get('source', 'sqldb')
-    s_mag = float(request.args.get('s_mag', 2))
-    e_mag = float(request.args.get('e_mag', 3))
-
-    columns = ['time', 'latitude', 'longitude', 'place', 'mag']
-    columns_str = '"' + '","'.join(columns) + '"'
-
-    sqlquery = 'select {columns_str} from dbo.all_month where mag between {s_mag} and {e_mag};'
+    # random_list = [round(random.uniform(s_mag, e_mag), 1) for i in range(cnt)]
+    # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+    # columns_str = '"' + '","'.join(columns) + '"'
+    years = []
+    for i in range(year_start, year_end + 1):
+        years.append(i)
+    formatted_data = []
+    # sqlquery = 'select * from dbo.minnow;'
     cursor = database.connection.cursor()
     t = time.time()
+    time_of_1st = 0
+    total_time_taken = 0
+    result_1st = []
+    new_data = []
     if source == 'cache':
         source_used = 'Redis Cache'
-        for i in range(cnt):
-            formatted_query = sqlquery.format(columns_str=columns_str, s_mag=s_mag, e_mag=e_mag)
+        for year in years:
+            sqlquery = 'select [{0}] from dbo.population where State like \'%{1}%\';'.format(year, state)
+            formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            t = time.time()
+
             result = redis.get(query_hash)
             if result:
-                pass
+                result = loads(result.decode())
             else:
                 cursor.execute(formatted_query)
                 rows = cursor.fetchall()
 
-                # if rows:
-                #     print('Values present for: ',query_hash)
-
-                formatted_data = []
                 for row in rows:
                     quake = dict()
-                    for i, val in enumerate(row):
-                        if type(val) == datetime:
-                            val = time.mktime(val.timetuple())
-                        quake[columns[i]] = val
+                    quake[year] = row['{}'.format(str(year))]
+                    # for i, val in enumerate(row):
+                    #     if type(val) == datetime:
+                    #         val = time.mktime(val.timetuple())
+                    #     # quake[columns[i]] = val
                     formatted_data.append(quake)
                 redis.set(query_hash, dumps(formatted_data))
 
                 result = redis.get(query_hash)
             result = loads(result.decode())
+            total_time_taken += (time.time() - t)
+            # if time_of_1st == 0:
+            # time_of_1st = deepcopy(total_time_taken)
+            result_1st = result
+            # new_data = []
+            # for i, value in enumerate(result_1st):
+            #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
+
     else:
         source_used = 'Azure SQL'
-        for ri in range(cnt):
-            formatted_query = sqlquery.format(columns_str=columns_str, s_mag=s_mag, e_mag=e_mag)
+        new_data = []
+        for year in years:
+            sqlquery = 'select [{0}] from dbo.population where State like \'%{1}%\';'.format(year, state)
+            formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
-            # print('QUERY:',formatted_query)
+            t = time.time()
             cursor.execute(formatted_query)
+            total_time_taken += (time.time() - t)
+
+            rows = cursor.fetchall()
+            # if rows:
+            #     print('Values present for: ',query_hash)
+
+            for row in rows:
+                formatted_data.append({"# People": row.cursor_description[0][0], "Age Range": '0' + " to " + str(row['{}'.format(year)])})
+            #     quake['year'] = year
+            #     quake['']
+            #     # for i, val in enumerate(row):
+            #     #     if type(val) == datetime:
+            #     #         val = time.mktime(val.timetuple())
+            #     # quake[columns[i]] = val
+            #     formatted_data.append(quake)
+            redis.set(query_hash, dumps(formatted_data))
+
+        result = formatted_data
+        result_1st = result
+
+        # new_data = []
+        # for i, value in enumerate(result_1st):
+        #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
+        # if time_of_1st == 0:
+        #     time_of_1st = deepcopy(total_time_taken)
+        #     result_1st = result
+
+    return render_template('results.html', time_taken=total_time_taken, count=0, source=source_used, earthquakes=result_1st)
+
+
+@app.route('/analyze_bl')
+def analyze_bl():
+    s_mag = float(request.args.get('smag', 2))
+    e_mag = float(request.args.get('emag', 3))
+    cnt = 0
+    # age = int(request.args.get('age', 10))
+    source = request.args.get('source', 'sqldb')
+    # random_list = [round(random.uniform(s_mag, e_mag), 1) for i in range(cnt)]
+    # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+    # columns_str = '"' + '","'.join(columns) + '"'
+    random_list = []
+    while s_mag <= e_mag:
+        temp = s_mag + 0.5
+        random_list.append((s_mag, temp))
+        s_mag = temp + 0.01
+
+    sqlquery = 'select count(*) as counts, Year from dbo.educationshare where BLPercent between {} and {} group by Year;'
+    cursor = database.connection.cursor()
+    t = time.time()
+    time_of_1st = 0
+    total_time_taken = 0
+    result_1st = []
+    new_data = []
+    if source == 'cache':
+        source_used = 'Redis Cache'
+        for start, end in random_list:
+            formatted_query = sqlquery.format(start, end)
+            query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            t = time.time()
+
+            result = redis.get(query_hash)
+            if result:
+                result = loads(result.decode())
+            else:
+                cursor.execute(formatted_query)
+                rows = cursor.fetchall()
+
+                formatted_data = []
+                for row in rows:
+                    formatted_data.append({"count": str(row['counts']), "year": str(row['year'])})
+                redis.set(query_hash, dumps(formatted_data))
+
+                result = redis.get(query_hash)
+            result = loads(result.decode())
+            total_time_taken += (time.time() - t)
+            # if time_of_1st == 0:
+            # time_of_1st = deepcopy(total_time_taken)
+            result_1st = result
+            # new_data = []
+            # for i, value in enumerate(result_1st):
+            #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
+
+    else:
+        source_used = 'Azure SQL'
+        for start, end in random_list:
+            formatted_query = sqlquery.format(start, end)
+            query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            t = time.time()
+
+            cursor.execute(formatted_query)
+
+            total_time_taken += (time.time() - t)
+
             rows = cursor.fetchall()
 
             # if rows:
             #     print('Values present for: ',query_hash)
             formatted_data = []
-            for row in rows:
-                quake = dict()
-                for i, val in enumerate(row):
-                    if type(val) == datetime:
-                        val = time.mktime(val.timetuple())
-                    quake[columns[i]] = val
-                formatted_data.append(quake)
+            for i, row in enumerate(rows):
+                formatted_data.append({"count": str(row['counts']), "year": str(row['year'])})
             redis.set(query_hash, dumps(formatted_data))
 
             result = formatted_data
+            result_1st = result
 
-    time_taken = time.time() - t
-    print('okay')
-    return render_template('results.html', time_taken=time_taken, count=cnt, source=source_used, earthquakes=result)
+            # new_data = []
+            # for i, value in enumerate(result_1st):
+            #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
+            # if time_of_1st == 0:
+            #     time_of_1st = deepcopy(total_time_taken)
+            #     result_1st = result
 
-
-@app.route('/get_some')
-def get_some():
-    columns = ['time', 'latitude', 'longitude', 'place', 'mag']
-    sqlquery = 'select top 10 {columns} from dbo.all_month;'.format(columns='"' + '","'.join(columns) + '"')
-    cursor = database.connection.cursor()
-    cursor.execute(sqlquery)
-    row = cursor.fetchone()
-    all_data = []
-
-    while row:
-        quake = dict()
-        for i, val in enumerate(row):
-            quake[columns[i]] = val
-        all_data.append(quake)
-        row = cursor.fetchone()
-    print('QUAKEs:', all_data)
-    return render_template('index.html', earthquakes=all_data)
+    return render_template('results.html', time_taken=total_time_taken, count=cnt, source=source_used, earthquakes=result_1st)
 
 
-@app.route('/createtable')
-def createTable():
-    try:
-        lstDictionaryData = []
-        # conn = pypyodbc.connect('DRIVER=' + driver + ';SERVER=' + server + ';PORT=1443;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-        cursor = database.connection.cursor()
-        # query = "drop table dbo.people"
-        # cursor.execdirect(query)
-        # query = "CREATE TABLE dbo.all_month (\"time\" datetime, \"latitude\" FLOAT, \"longitude\" FLOAT, \"depth\" FLOAT, \"mag\" FLOAT, \"magType\" TEXT, \"nst\" INT, \"gap\" INT, \"dmin\" FLOAT, \"rms\" FLOAT, \"net\" TEXT, \"id\" TEXT, \"updated\" datetime, \"place\" TEXT, \"type\" TEXT, \"horontalError\" FLOAT, \"depthError\" FLOAT, \"magError\" FLOAT, \"magNst\" INT, \"status\" TEXT, \"locationSource\" TEXT, \"magSource\" TEXT)"
-        # query = "CREATE TABLE dbo.all_month(time DATETIME,latitude FLOAT,longitude FLOAT,depth FLOAT,mag FLOAT,magType TEXT,nst INT,gap INT,dmin FLOAT,rms FLOAT,net TEXT,id TEXT,updated DATETIME,place TEXT,type TEXT,horontalError FLOAT,depthError FLOAT,magError FLOAT,magNst INT,status TEXT,locationSource TEXT,magSource TEXT)"
-        query = "CREATE TABLE dbo.people(Name TEXT, Grade INT, Room INT, Telnum INT, Picture TEXT, Keywords TEXT)"
-        startTime = time.time()
-        # cursor.execute(query)
-        cursor.execdirect(query)
-        # cursor.execdirect("CREATE INDEX all_month_mag__index ON cloudsqldb.dbo.earthquake (mag)")
-        # cursor.execdirect("CREATE INDEX all_month_lat__index ON cloudsqldb.dbo.earthquake (latitude)")
-        # cursor.execdirect("CREATE INDEX all_month_long__index ON cloudsqldb.dbo.earthquake (longitude)")
-        endTime = time.time()
-        # conn.close()
-        executionTime = (endTime - startTime) * 1000
-        return render_template('results.html', earthquakes=lstDictionaryData, count=lstDictionaryData.__len__(), time_taken=executionTime)
-    except Exception as e:
-        print(e)
-
-
-@app.route('/upload_data', methods=['POST'])
-def upload():
-    try:
-        createTable()
-        tempfile = request.files['file']
-        # sqlquery = 'Insert into "all_month" ({columns}) values ({values})'
-        sqlquery = 'Insert into dbo.people ({columns}) values ({values})'
-        filename = 'temp.csv'
-        tempfile.save(os.path.join(filename))
-
-        csv_file = open(filename, 'r')
-        reader = csv.DictReader(csv_file)
-        for row in reader:
-            cols = '"' + '","'.join(row.keys()) + '"'
-            vals = '\'' + '\',\''.join(row.values()) + '\''
-            q = sqlquery.format(columns=cols, values=vals)
-            print("QUERy:", q)
-            cursor = database.connection.cursor()
-            cursor.execute(q)
-            database.connection.commit()
-            print('commit executed.')
-        csv_file.close()
-        # file.save(os.path.join(Uploadpath, file_name))
-        # con = engine.connect()
-        # df = pd.read_csv(os.path.join(Uploadpath, file_name))
-        # tab_file = file_name.split('.')[0]
-        # start_time = time.time()
-        # df.to_sql(name=tab_file, con=con, if_exists='replace', index=False)
-        # end_time = time.time()
-        # diff = str((end_time - start_time) * 1000)
-        # con.close()
-        return render_template('index.html', earthquakes=[])
-    except Exception as e:
-        return render_template('index.html', earthquakes=[])
+# @app.route('/get_some')
+# def get_some():
+#     columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+#     sqlquery = 'select top 10 {columns} from dbo.all_month;'.format(columns='"' + '","'.join(columns) + '"')
+#     cursor = database.connection.cursor()
+#     cursor.execute(sqlquery)
+#     row = cursor.fetchone()
+#     all_data = []
+#
+#     while row:
+#         quake = dict()
+#         for i, val in enumerate(row):
+#             quake[columns[i]] = val
+#         all_data.append(quake)
+#         row = cursor.fetchone()
+#     print('QUAKEs:', all_data)
+#     return render_template('index.html', earthquakes=all_data)
+#
+#
+# @app.route('/createtable')
+# def createTable():
+#     try:
+#         lstDictionaryData = []
+#         # conn = pypyodbc.connect('DRIVER=' + driver + ';SERVER=' + server + ';PORT=1443;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+#         cursor = database.connection.cursor()
+#         # query = "drop table dbo.people"
+#         # cursor.execdirect(query)
+#         # query = "CREATE TABLE dbo.all_month (\"time\" datetime, \"latitude\" FLOAT, \"longitude\" FLOAT, \"depth\" FLOAT, \"mag\" FLOAT, \"magType\" TEXT, \"nst\" INT, \"gap\" INT, \"dmin\" FLOAT, \"rms\" FLOAT, \"net\" TEXT, \"id\" TEXT, \"updated\" datetime, \"place\" TEXT, \"type\" TEXT, \"horontalError\" FLOAT, \"depthError\" FLOAT, \"magError\" FLOAT, \"magNst\" INT, \"status\" TEXT, \"locationSource\" TEXT, \"magSource\" TEXT)"
+#         # query = "CREATE TABLE dbo.all_month(time DATETIME,latitude FLOAT,longitude FLOAT,depth FLOAT,mag FLOAT,magType TEXT,nst INT,gap INT,dmin FLOAT,rms FLOAT,net TEXT,id TEXT,updated DATETIME,place TEXT,type TEXT,horontalError FLOAT,depthError FLOAT,magError FLOAT,magNst INT,status TEXT,locationSource TEXT,magSource TEXT)"
+#         query = "CREATE TABLE dbo.people(Name TEXT, Grade INT, Room INT, Telnum INT, Picture TEXT, Keywords TEXT)"
+#         startTime = time.time()
+#         # cursor.execute(query)
+#         cursor.execdirect(query)
+#         # cursor.execdirect("CREATE INDEX all_month_mag__index ON cloudsqldb.dbo.earthquake (mag)")
+#         # cursor.execdirect("CREATE INDEX all_month_lat__index ON cloudsqldb.dbo.earthquake (latitude)")
+#         # cursor.execdirect("CREATE INDEX all_month_long__index ON cloudsqldb.dbo.earthquake (longitude)")
+#         endTime = time.time()
+#         # conn.close()
+#         executionTime = (endTime - startTime) * 1000
+#         return render_template('results.html', earthquakes=lstDictionaryData, count=lstDictionaryData.__len__(), time_taken=executionTime)
+#     except Exception as e:
+#         print(e)
+#
+#
+# @app.route('/upload_data', methods=['POST'])
+# def upload():
+#     try:
+#         createTable()
+#         tempfile = request.files['file']
+#         # sqlquery = 'Insert into "all_month" ({columns}) values ({values})'
+#         sqlquery = 'Insert into dbo.people ({columns}) values ({values})'
+#         filename = 'temp.csv'
+#         tempfile.save(os.path.join(filename))
+#
+#         csv_file = open(filename, 'r')
+#         reader = csv.DictReader(csv_file)
+#         for row in reader:
+#             cols = '"' + '","'.join(row.keys()) + '"'
+#             vals = '\'' + '\',\''.join(row.values()) + '\''
+#             q = sqlquery.format(columns=cols, values=vals)
+#             print("QUERy:", q)
+#             cursor = database.connection.cursor()
+#             cursor.execute(q)
+#             database.connection.commit()
+#             print('commit executed.')
+#         csv_file.close()
+#         # file.save(os.path.join(Uploadpath, file_name))
+#         # con = engine.connect()
+#         # df = pd.read_csv(os.path.join(Uploadpath, file_name))
+#         # tab_file = file_name.split('.')[0]
+#         # start_time = time.time()
+#         # df.to_sql(name=tab_file, con=con, if_exists='replace', index=False)
+#         # end_time = time.time()
+#         # diff = str((end_time - start_time) * 1000)
+#         # con.close()
+#         return render_template('index.html', earthquakes=[])
+#     except Exception as e:
+#         return render_template('index.html', earthquakes=[])
 
 
 if __name__ == '__main__':

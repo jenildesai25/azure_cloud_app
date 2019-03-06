@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-   <script src="http://d3js.org/d3.v4.min.js"></script>
-    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+{#   <script src="http://d3js.org/d3.v4.min.js"></script>#}
+{#    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>#}
 
 
   <title>Azure App</title>
@@ -27,6 +27,7 @@
           7. count :<input type="text" name="count" width="5">
             s mag :<input type="number" name="smag" width="5">
             e mag :<input type="number" name="emag" width="5">
+
           <br>
           Source
           <select name="source">
@@ -38,9 +39,11 @@
       </p>
       <p>
           <form action="/analyze_sameq" method="get">
-            No of Queries : <input type="number" name="count" width="5">
+            state: <input type="text" name="state" width="5">
+            year start :<input type="number" name="yearstart" width="5">
+            year end :<input type="number" name="yearend" width="5">
             <br>
-            Mag from : <input type="float" name="s_mag" width="5"> to <input type="float" name="e_mag" width="5">
+{#            Mag from : <input type="float" name="s_mag" width="5"> to <input type="float" name="e_mag" width="5">#}
             <br>
             Source
             <select name="source">
@@ -51,6 +54,19 @@
           </form>
         </p>
       <br>
+      <form action="/analyze_bl" method="get">
+{#          . count :<input type="text" name="count" width="5">#}
+            blpercent start :<input type="number" name="smag" width="5">
+            end :<input type="number" name="emag" width="5">
+
+          <br>
+          Source
+          <select name="source">
+              <option value="sqldb">SQL</option>
+              <option value="cache">Cache</option>
+            </select>
+          <input type="submit" value="Search">
+        </form>
 {#      <form action = "http://localhost:5000/uploader" method = "POST" #}
 {#         enctype = "multipart/form-data">#}
 {#         <input type = "file" name = "file" />#}
