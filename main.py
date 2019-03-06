@@ -293,7 +293,7 @@ def analyze_bl():
             #     time_of_1st = deepcopy(total_time_taken)
             #     result_1st = result
 
-    return render_template('results.html', time_taken=total_time_taken, count=cnt, source=source_used, earthquakes=result_1st)
+    return render_template('result.html', time_taken=total_time_taken, count=cnt, source=source_used, earthquakes=result_1st)
 
 
 # @app.route('/get_some')
