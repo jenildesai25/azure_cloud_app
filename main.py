@@ -222,8 +222,9 @@ def analyze_sameq():
 
 @app.route('/analyze_bl')
 def analyze_bl():
-    s_mag = float(request.args.get('smag', 2))
-    e_mag = float(request.args.get('emag', 3))
+    code = request.args.get('code', 'CRI')
+    start = int(request.args.get('start', 1980))
+    end = int(request.args.get('end', 2010))
     cnt = 0
     # age = int(request.args.get('age', 10))
     source = request.args.get('source', 'sqldb')
@@ -231,12 +232,13 @@ def analyze_bl():
     # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
     # columns_str = '"' + '","'.join(columns) + '"'
     random_list = []
-    while s_mag <= e_mag:
-        temp = s_mag + 0.5
-        random_list.append((s_mag, temp))
-        s_mag = temp + 0.01
+    random_list.append((start, end))
+    # while s_mag <= e_mag:
+    #     temp = s_mag + 0.5
+    #     random_list.append((s_mag, temp))
+    #     s_mag = temp + 0.01
 
-    sqlquery = 'select count(*) as counts, Year from dbo.educationshare where BLPercent between {} and {} group by Year;'
+    sqlquery = 'select Year,BLPercent from dbo.educationshare where Code like \'%{}%\' and Year between {} and {};'
     cursor = database.connection.cursor()
     t = time.time()
     time_of_1st = 0
@@ -275,7 +277,7 @@ def analyze_bl():
     else:
         source_used = 'Azure SQL'
         for start, end in random_list:
-            formatted_query = sqlquery.format(start, end)
+            formatted_query = sqlquery.format(code, start, end)
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             t = time.time()
 
@@ -289,7 +291,7 @@ def analyze_bl():
             #     print('Values present for: ',query_hash)
             formatted_data = []
             for i, row in enumerate(rows):
-                formatted_data.append({"count": str(row['counts']), "year": str(row['year'])})
+                formatted_data.append({"year": str(row['year']), "blpercent": str(row['blpercent'])})
             redis.set(query_hash, dumps(formatted_data))
 
             result = formatted_data

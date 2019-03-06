@@ -57,17 +57,221 @@ Show and submit code:
  7. (Using the population data) Allow a user, through a web form, to give a year (for example 2017) and three ranges 
     (in millions, for example 20 to 50, 10 to 20, and 0 to 10, representing 20 million to 50 million in the first group, etc.)
     and show (web page) how many states there are in each group (no "visualizing", no graphing necessary).
+    ANS:
+    @app.route('/analyze_sameq')
+def analyze_sameq():
+    year = int(request.args.get('year', 2017))
+    range1 = int(request.args.get('range1', 20))
+    range1end = int(request.args.get('range1end', 50))
+    range2 = int(request.args.get('range2', 10))
+    range2end = int(request.args.get('range2end', 20))
+    range3 = int(request.args.get('range3', 0))
+    range3end = int(request.args.get('range3end', 10))
+    # year_start = int(request.args.get('yearstart', 2010))
+    # year_end = int(request.args.get('yearend', 2018))
+    source = request.args.get('source', 'sqldb')
+    # random_list = [round(random.uniform(s_mag, e_mag), 1) for i in range(cnt)]
+    # columns = ['time', 'latitude', 'longitude', 'place', 'mag']
+    # columns_str = '"' + '","'.join(columns) + '"'
+    years = []
+    years.append((range1, range1end))
+    years.append((range2, range2end))
+    years.append((range3, range3end))
+    # for i in range(year_start, year_end + 1):
+    #     years.append(i)
+    formatted_data = []
+    # sqlquery = 'select * from dbo.minnow;'
+    cursor = database.connection.cursor()
+    t = time.time()
+    time_of_1st = 0
+    total_time_taken = 0
+    result_1st = []
+    new_data = []
+    if source == 'cache':
+        source_used = 'Redis Cache'
+        for start, end in years:
+            sqlquery = 'select State from population where [{0}] between {1} and {2}'.format(year, start, end)
+            formatted_query = sqlquery
+            query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            t = time.time()
+
+            result = redis.get(query_hash)
+            if result:
+                result = loads(result.decode())
+            else:
+                cursor.execute(formatted_query)
+                rows = cursor.fetchall()
+
+                for row in rows:
+                    quake = dict()
+                    quake[year] = row['{}'.format(str(year))]
+                    # for i, val in enumerate(row):
+                    #     if type(val) == datetime:
+                    #         val = time.mktime(val.timetuple())
+                    #     # quake[columns[i]] = val
+                    formatted_data.append(quake)
+                redis.set(query_hash, dumps(formatted_data))
+
+                result = redis.get(query_hash)
+            result = loads(result.decode())
+            total_time_taken += (time.time() - t)
+            # if time_of_1st == 0:
+            # time_of_1st = deepcopy(total_time_taken)
+            result_1st = result
+            # new_data = []
+            # for i, value in enumerate(result_1st):
+            #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
+
+    else:
+        source_used = 'Azure SQL'
+        new_data = []
+        for start, end in years:
+            sqlquery = 'select State from population where [{0}] between {1} and {2}'.format(year, start, end)
+            formatted_query = sqlquery
+            query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
+            t = time.time()
+            cursor.execute(formatted_query)
+            total_time_taken += (time.time() - t)
+
+            rows = cursor.fetchall()
+            # if rows:
+            #     print('Values present for: ',query_hash)
+
+            for row in rows:
+                formatted_data.append({"# People": row['state'], "Age Range": '{}'.format(start) + " to " + '{}'.format(end)})
+            #     quake['year'] = year
+            #     quake['']
+            #     # for i, val in enumerate(row):
+            #     #     if type(val) == datetime:
+            #     #         val = time.mktime(val.timetuple())
+            #     # quake[columns[i]] = val
+            #     formatted_data.append(quake)
+            redis.set(query_hash, dumps(formatted_data))
+
+        result = formatted_data
+        result_1st = result
+
+        # new_data = []
+        # for i, value in enumerate(result_1st):
+        #     new_data.append([result_1st[i]['latitude'], result_1st[i]['longitude']])
+        # if time_of_1st == 0:
+        #     time_of_1st = deepcopy(total_time_taken)
+        #     result_1st = result
+
+    return render_template('results.html', time_taken=total_time_taken, count=0, source=source_used, earthquakes=result_1st)
 
  8. Using what was done in the previous question, showing the same web form, please show a page,
     followed by a either a pie chart or a vertical bar chart on that page, which is at least half the width of the screen, 
     which shows the number of states in each range. Each bar or pie slice should be in a different color, 
     please show labels inside or to the right of each bar, or inside or adjacent to each pie slice.
+    ANS:
+
+    <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+{#  <script src="/lib/d3.v4.3.0.js"></script>#}
+{#  <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>#}
+    <script src="http://d3js.org/d3.v4.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+  <title>Azure App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <header id="flex-header">
+
+    <h1>Jenil Desai</h1>
+    <h2>Student ID - 1001520245</h2>
+  </header>
+  <main>
+    <br>
+      <div id="chartContainer">
+            <script type="text/javascript">
+
+                var svg = dimple.newSvg("#chartContainer", 700, 400);
+                var data = {{earthquakes | tojson | safe}}
+                {#var data = [2,3];#}
+                {#console.log(data);#}
+                {#var svg2 = dimple.newSvg("#pie", "100%", 400);#}
+                var myChart = new dimple.chart(svg, data);
+
+                myChart.setBounds(10, 10, 660, 360)
+                myChart.addMeasureAxis("p", "# People");
+                myChart.addSeries("Age Range", dimple.plot.pie);
+                myChart.addLegend(550, 20, 90, 300, "left");
+                myChart.draw();
+
+            </script>
+      </div>
+
+
+    <p>
+        RESULT
+        <br>
+        Source: {{source}}
+        <br>
+        Queries #: {{count}}
+        <br>
+        Time taken: {{time_taken}} seconds
+    </p>
+    <br>
+    <br>
+
+        <table border="3">
+            <tr>
+              <td>
+                Result
+              </td>
+{#              <td>#}
+{#                LATITUDE#}
+{#              </td>#}
+{#              <td>#}
+{#                LONGITUDE#}
+{#              </td>#}
+{#              <td>#}
+{#                PLACE#}
+{#              </td>#}
+{#              <td>#}
+{#                MAG#}
+{#              </td>#}
+            </tr>
+            {% for quake in earthquakes %}
+              <tr>
+                <td>
+                  {{ quake }}
+                </td>
+{#                <td>#}
+{#                  {{ quake.latitude }}#}
+{#                </td>#}
+{#                <td>#}
+{#                  {{ quake.longitude }}#}
+{#                </td>#}
+{#                <td>#}
+{#                  {{ quake.place }}#}
+{#                </td>#}
+{#                <td>#}
+{#                  {{ quake.mag }}#}
+{#                </td>#}
+              </tr>
+            {% endfor %}
+          </table>
+          <br>
+
+
+  </main>
+</body>
+</html>
 
  9. Using the education data set, please create a web form that allows a user to give a three letter code and a range of years,
     (for example "CRI", 1980 to 2010) and show a point chart (scatter chart) where the x axis is year, and the y axis is BLPercent,
     please label the x and y axis. (If you are having problems you may "normalize" the years by subtracting the minimum dividing
     by 5, then add one, so 1970 becomes (1970-1970)/5+1 = 1, 1975 becomes (1975-1970)/5+1 = 2, etc. This is NOT required, you may 
     also just use 1970, 1975, etc. You may need also to normalize the y axis).
+    ANS:
 
 10. Using the population data set, allow a user, through a web form, to give a year (for example 2017) and a range
     value (in millions, for example 3), and find the number of states in each population segment: 0 to 3 million, 

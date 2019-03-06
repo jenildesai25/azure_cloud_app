@@ -24,18 +24,15 @@
       <div id="chartContainer">
             <script type="text/javascript">
 
+
                 var svg = dimple.newSvg("#chartContainer", 700, 400);
                 var data = {{earthquakes | tojson | safe}}
-                {#var data = [2,3];#}
-                {#console.log(data);#}
-                {#var svg2 = dimple.newSvg("#pie", "100%", 400);#}
-                var myChart = new dimple.chart(svg, data);
+                var chart = new dimple.chart(svg, data);
 
-                myChart.setBounds(10, 10, 660, 360)
-                myChart.addMeasureAxis("p", "count");
-                myChart.addSeries("year", dimple.plot.pie);
-                myChart.addLegend(550, 20, 90, 300, "left");
-                myChart.draw();
+                chart.addCategoryAxis("x", "year");
+                chart.addCategoryAxis("y", "blpercent");
+                chart.addSeries(null, dimple.plot.bubble);
+                chart.draw();
 
             </script>
       </div>
