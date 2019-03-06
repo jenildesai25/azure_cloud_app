@@ -187,10 +187,17 @@ def analyze_sameq():
         new_data = []
         # magStart = 0
         # magEnd = magStart + range1end
-
-        while range1 < 1000000:
+        data = []
+        dif = deepcopy((range1end - range1))
+        temp = 0
+        while temp <= 50000000:
+            data.append((range1, range1end))
+            range1 = range1 + (range1end - range1)
+            range1end = range1end + dif
+            temp += dif
+        for start, end in data:
             print(range1)
-            sqlquery = 'select count(*) as counts from population where [{}] between {} and {};'.format(year, range1, range1end)
+            sqlquery = 'select count(*) as counts from population where [{}] between {} and {};'.format(year, start, end)
             formatted_query = sqlquery
             query_hash = hashlib.sha256(formatted_query.encode()).hexdigest()
             t = time.time()
@@ -202,7 +209,7 @@ def analyze_sameq():
             #     print('Values present for: ',query_hash)
 
             for row in rows:
-                formatted_data.append({"# People": row['counts'], "Age Range": '{}'.format(range1) + " to " + '{}'.format(range1end)})
+                formatted_data.append({"state": row['counts'], "range of population": '{}'.format(range1) + " to " + '{}'.format(range1end)})
             #     quake['year'] = year
             #     quake['']
             #     # for i, val in enumerate(row):
@@ -211,7 +218,7 @@ def analyze_sameq():
             #     # quake[columns[i]] = val
             #     formatted_data.append(quake)
             redis.set(query_hash, dumps(formatted_data))
-            range1 = range1 + 300000
+            # range1 = range1 + 300000
         result = formatted_data
         result_1st = result
 
