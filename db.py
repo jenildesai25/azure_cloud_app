@@ -5,33 +5,17 @@ from redis import StrictRedis
 # import mysql.connector
 # from credentials import MYSQL_DB
 
-# SQL_DB = {
-#     "Driver": "{ODBC Driver 13 for SQL Server}",
-#     "Server": "tcp:cse6331sqlserver.database.windows.net,1433",
-#     "Database": "cloudsqldb",
-#     "Uid": "jenildesai25",
-#     "Pwd": "Bhavya@1008",
-#     "Encrypt": "yes",
-#     "TrustServerCertificate": "no",
-#     "Connection Timeout": 30
-# }
 
 SQL_DB = {
     "Driver": "{ODBC Driver 13 for SQL Server}",
     "Server": "tcp:cse6331sqlserver.database.windows.net,1433",
     "Database": "cloudsqldb",
-    "Uid": "jenildesai25@cse6331sqlserver",
-    "Pwd": "Bhavya@1008",
+    "Uid": "############",
+    "Pwd": "########",
     "Encrypt": "yes",
     "TrustServerCertificate": "yes",
     "Connection Timeout": 30
 }
-# MYSQL_DB = {
-#     'host': 'azmysqldb.mysql.database.azure.com',
-#     'user': 'chaitanya@azmysqldb',
-#     'password': 'Cl0uduta',
-#     'database': 'azmysqldb'
-# }
 REDIS_DB = {
     'host': 'cse6331azureredis.redis.cache.windows.net',
     'port': 6380,
@@ -49,7 +33,7 @@ azure_login = [
         "state": "Enabled",
         "tenantId": "5cdc5b43-d7be-4caa-8173-729e3b0a62d9",
         "user": {
-            "name": "jenilbimal.desai@mavs.uta.edu",
+            "name": "########",
             "type": "user"
         }
     }
